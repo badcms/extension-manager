@@ -13,7 +13,7 @@ use React\Promise\PromiseInterface;
 
 class Installer extends LibraryInstaller implements InstallerInterface
 {
-    public $pluginsDB = __DIR__."/../../../../config/plugins.json";
+    protected $pluginsDB = "/config/plugins.php";
 
     /**
      * {@inheritDoc}
@@ -43,12 +43,27 @@ class Installer extends LibraryInstaller implements InstallerInterface
 
     private function readDB()
     {
-        return json_decode(file_get_contents($this->pluginsDB), JSON_OBJECT_AS_ARRAY);
+        $projectRootPath = dirname($this->vendorDir);
+
+        if (file_exists($pluginsConfigFile = $projectRootPath.$this->pluginsDB)) {
+            return include $pluginsConfigFile;
+        }
+
+        return [];
     }
 
     private function saveDB($plugins)
     {
-        return file_put_contents($this->pluginsDB, json_encode($plugins, JSON_PRETTY_PRINT));
+        $projectRootPath = dirname($this->vendorDir);
+
+        $plugins = "<?php\n return ".var_export($plugins, true).";";
+        $pluginsConfigFile = $projectRootPath.$this->pluginsDB;
+
+        if (!file_exists($configDir = dirname($pluginsConfigFile))) {
+            mkdir($configDir);
+        }
+
+        return file_put_contents($pluginsConfigFile, $plugins);
     }
 
     private function addPlugin($package)
@@ -56,7 +71,7 @@ class Installer extends LibraryInstaller implements InstallerInterface
         $name = $package["name"];
         $description = $package["description"] ?? "";
 
-        echo "\e[35m[ BadCMS - \e[32mInstalling Plugin \e[33m".$name."\e[32m - \e[36m$description \e[35m ]\e[39m".PHP_EOL;
+        echo PHP_EOL."\e[35m[ BadCMS - \e[32mInstalling Plugin \e[33m".$name."\e[32m - \e[36m$description \e[35m ]\e[39m".PHP_EOL;
 
         $plugins = $this->readDB();
         if (!$plugins) {
@@ -70,7 +85,7 @@ class Installer extends LibraryInstaller implements InstallerInterface
     {
         $plugins = $this->readDB();
         if (isset($plugins[$name])) {
-            echo " - Remove Plugin ".$name.PHP_EOL;
+            echo "\n - Remove Plugin ".$name.PHP_EOL;
 
             unset($plugins[$name]);
             $this->saveDB($plugins);
@@ -84,7 +99,7 @@ class Installer extends LibraryInstaller implements InstallerInterface
         return $promise->then(function () use ($package, $repo) {
             $extra = $package->getExtra();
             $this->addPlugin([
-                "name" => $name = $package->getName(),
+                "name" => $package->getName(),
                 "version" => $package->getVersion(),
                 "namespace" => isset($extra["namespace"]) ? $extra["namespace"] : null,
                 "description" => isset($extra["description"]) ? $extra["description"] : "",
