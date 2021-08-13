@@ -1,0 +1,27 @@
+{
+  "name": "badcms/extension-manager",
+  "description": "Extension manager for BadCMS",
+  "type": "composer-plugin",
+  "license": "MIT",
+  "keywords": ["php","learn","badcms","baikaldigitalacademy"],
+  "homepage": "https://baikaldigitalacademy.ru",
+  "authors": [
+    {
+      "name": "BadCoder",
+      "email": "badphpcms@gmail.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "BadCMS\\ExtensionManager\\": "src/"
+    }
+  },
+  "extra": {
+    "class": "BadCMS\\ExtensionManager\\InstallerComposerPlugin"
+  },
+  "require": {
+    "ext-json": "*",
+    "composer-plugin-api": "^2.0",
+    "composer/composer": "^2.1"
+  }
+}
